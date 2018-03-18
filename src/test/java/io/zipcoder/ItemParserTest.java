@@ -59,4 +59,57 @@ public class ItemParserTest {
         Integer actual = itemParser.findKeyValuePairsInRawItemData(rawSingleItemIrregularSeperatorSample).size();
         assertEquals(expected, actual);
     }
-}
+    @Test
+    public void findNameTest(){
+        String expected = "milk";
+        String actual = itemParser.findName(rawSingleItem);
+        Assert.assertEquals(expected,actual);
+
+    }
+    @Test
+    public void findPriceTest() {
+        String expected = "3.23";
+        String actual = itemParser.findPrice(rawSingleItem);
+        Assert.assertEquals(expected, actual);
+    }
+    @Test
+    public void findExpirationTest() {
+        String expected = "1/25/2016";
+        String actual = itemParser.findExpiration(rawSingleItem);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void findTypeTest() {
+        String expected = "food";
+        String actual = itemParser.findType(rawSingleItem);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void display() throws Exception{
+        String expected = "\n" + "name:     Bread         seen:  6  times\n" + "===============\t\t\t===============\n" +"Price:     1.23         seen:  6  times\n" + "---------------\t\t\t---------------\n" + "\n" + "name:      Milk         seen:  6  times\n" + "===============\t\t\t===============\n" + "Price:     3.23         seen:  5  times\n" + "---------------\t\t\t---------------\n" + "Price:     1.23         seen:  1  times\n" + "---------------\t\t\t---------------\n" + "\n" + "name:    Apples         seen:  4  times\n" + "===============\t\t\t===============\n" +
+                "Price:     0.25         seen:  2  times\n" + "---------------\t\t\t---------------\n" + "Price:     0.23         seen:  2  times\n" + "---------------\t\t\t---------------\n" + "\n" + "name:   Cookies         seen:  8  times\n" + "===============\t\t\t===============\n" + "Price:     2.25         seen:  8  times\n" + "---------------\t\t\t---------------\n" + "\n" + "Errors                  seen:  4  times";
+        String actual = itemParser.display();
+        Assert.assertEquals(expected,actual);
+
+
+    }
+    @Test
+    public void seenPriceOccurencesTest(){
+        ArrayList<Item> listTest = new ArrayList<Item>();
+        Item itemTest = new Item("Bread", 3.12, "Food", "1/25/2016");
+        Item itemTest2 = new Item("Bread", 3.12, "Food", "1/25/2016");
+        Item itemTest3 = new Item("Bread", 2.00, "Food", "4/16/2016");
+
+        listTest.add(itemTest);
+        listTest.add(itemTest2);
+        listTest.add(itemTest3);
+
+        int expected = 2;
+        int actual = itemParser.seenPriceOccurences(listTest,3.12);
+
+        Assert.assertEquals(expected,actual);
+    }
+
+    }
