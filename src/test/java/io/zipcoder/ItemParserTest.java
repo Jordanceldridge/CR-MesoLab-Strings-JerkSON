@@ -96,18 +96,18 @@ public class ItemParserTest {
 
     }
     @Test
-    public void seenPriceOccurencesTest(){
-        ArrayList<Item> listTest = new ArrayList<Item>();
-        Item itemTest = new Item("Bread", 3.12, "Food", "1/25/2016");
-        Item itemTest2 = new Item("Bread", 3.12, "Food", "1/25/2016");
-        Item itemTest3 = new Item("Bread", 2.00, "Food", "4/16/2016");
-
-        listTest.add(itemTest);
-        listTest.add(itemTest2);
-        listTest.add(itemTest3);
-
-        int expected = 2;
-        int actual = itemParser.seenPriceOccurences(listTest,3.12);
+    public void getPriceOccurencesTest() throws ItemParseException {
+        ArrayList<Item> test = new ArrayList<Item>();
+        Item item1 = itemParser.parseStringIntoItem(rawSingleItem);
+        String rawItem2 = ("naME:BreaD;price:1.23;type:Food;expiration:1/02/2016##");
+        String rawItem3 = "naMe:Bread;price:1.23;type:Food^expiration:1/11/2016##";
+        Item item2 = itemParser.parseStringIntoItem(rawItem2);
+        Item item3 = itemParser.parseStringIntoItem(rawItem3);
+        test.add(item1);
+        test.add(item2);
+        test.add(item3);
+        int expected =2;
+        int actual = itemParser.getPriceOccurences(test,1.23);
 
         Assert.assertEquals(expected,actual);
     }

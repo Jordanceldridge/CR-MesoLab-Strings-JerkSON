@@ -10,19 +10,36 @@ import java.util.regex.Pattern;
 public class ItemParser {
 
     private Pattern pattern;
+
     private Matcher matcher;
-    private int counter = 0;
-    private Main main = new Main();
+
+    public int counter = 0;
+
+
+
     private Map<String ,ArrayList<Item>> groceryListMap = new HashMap<String, ArrayList<Item>>();
     // Splits string based on ##
+
     public ArrayList<String> parseRawDataIntoStringArray(String rawData){
         String stringPattern = "##";
         ArrayList<String> response = splitStringWithRegexPattern(stringPattern , rawData);
         return response;
     }
+    public Item parseStringIntoItem(String rawItem) throws ItemParseException {
+        if (findName(rawItem) == null || findPrice(rawItem) == null) {
+            throw new ItemParseException();
+
+        }
+        String Name = findName(rawItem);
+        Double Price = Double.parseDouble(findPrice(rawItem));
+        String Type = findType(rawItem);
+        String Expiration = findExpiration(rawItem);
+
+        return new Item(Name, Price, Type, Expiration);
+    }
 
     public ArrayList<String> findKeyValuePairsInRawItemData(String rawItem){
-        String stringPattern = "[^|*|@|!|$|%|&|;]";
+        String stringPattern = "[^|;]";
         ArrayList<String> response = splitStringWithRegexPattern(stringPattern , rawItem);
         return response;
     }
@@ -30,21 +47,11 @@ public class ItemParser {
         return new ArrayList<String>(Arrays.asList(inputString.split(stringPattern)));
     }
 
-    public Item parseStringIntoItem(String rawItem) throws ItemParseException {
-        if (findName(rawItem) == null || findPrice(rawItem) == null){
-            throw new ItemParseException();
-
-        }
-        String itemName = findName(rawItem);
-        Double ittemPrice = Double.parseDouble(findPrice(rawItem));
-        String itemType = findType(rawItem);
-        String itemExpiration = findExpiration(rawItem);
-
-        return new Item(itemName,ittemPrice,itemType,itemExpiration);
 
 
 
-    }
+
+
     public String findName(String rawItem){
         String search = "(?<=([Nn][Aa][Mm][Ee][^A-Za-z])).*?(?=[^A-Za-z0])";
         pattern = Pattern.compile(search);
@@ -70,29 +77,30 @@ public class ItemParser {
         return null;
     }
     public String findType(String rawItem){
-        pattern =Pattern.compile("(?<=([Tt][Yy][Pp][Ee][^A-Za-z])).*?(?=[^A-Za-z0])");
-        matcher.pattern().matcher(rawItem);
+        Pattern pattern =Pattern.compile("(?<=([Tt][Yy][Pp][Ee][^A-Za-z])).*?(?=[^A-Za-z0])");
+        Matcher regMatcher =pattern.matcher(rawItem);
 
-        if (matcher.find()){
-            return matcher.group().toLowerCase();
+        if (regMatcher.find()){
+            return (regMatcher).group().toLowerCase();
 
-            }
-        return null;
+            } else return null;
         }
 
 
 
     public String findExpiration(String rawItem){
-        pattern = Pattern.compile("(?<=([Tt][Yy][Pp][Ee][^A-Za-z])).*?(?=[^A-Za-z0])(.) + [^#]");
-        matcher = pattern.matcher(rawItem);
+        Pattern pattern = Pattern.compile("(?<=([Tt][Yy][Pp][Ee][^A-Za-z])).*?(?=[^A-Za-z0])(.) + [^#]");
+        Matcher regMatcher2 = pattern.matcher(rawItem);
 
-        if (matcher.find()){
-            return matcher.group();
-        }
+        if (regMatcher2.find()){
+            return (regMatcher2).group();
 
-        return null;
+        } else return null;
     }
     public Map<String, ArrayList<Item>> getMap() throws Exception{
+        Main main = new Main();
+
+
         ArrayList<String> listOfItems = parseRawDataIntoStringArray(main.readRawDataToString());
 
         for (String item : listOfItems){
@@ -111,6 +119,26 @@ public class ItemParser {
         }
         return groceryListMap;
     }
+    public String generateReport() throws Exception {
+        groceryListMap = getMap();
+        StringBuilder builder = new StringBuilder();
+
+        for (Map.Entry<String, ArrayList<Item>> groceryItems : groceryListMap.entrySet()) {
+            builder.append("\nname: ");
+            builder.append(String.format("%8s", captitalizeFirstLetter(groceryItems.getKey())));
+            builder.append("\t\t\t\tseen: " + getOccurencesOfItems(groceryItems.getValue()) + " times\n");
+            builder.append("===============" + "\t\t\t\t===============\n");
+            String priceReport = generatePriceReport(groceryItems);
+            builder.append(priceReport);
+            builder.append("---------------" + "\t\t\t\t---------------\n");
+
+
+        }
+        builder.append("\nErrors\t\t\t\t\t\tseen: "+counter+" times\n");
+        return builder.toString();
+    }
+
+
 
     public String display() throws Exception{
         groceryListMap = getMap();
@@ -124,7 +152,7 @@ public class ItemParser {
 
             ArrayList<Double> uniquePriceList = getUniquePrices(item);
             for (int i = 0; i < uniquePriceList.size(); i++) {
-                displayBuild.append(String.format("%-11s%.2f%15s%2d%5s", "Price:", uniquePriceList.get(i), "seen: ", seenPriceOccurences(item.getValue(), uniquePriceList.get(i)), "  times"));
+                displayBuild.append(String.format("%-11s%.2f%15s%2d%5s", "Price:", uniquePriceList.get(i), "seen: ", getPriceOccurences(item.getValue(), uniquePriceList.get(i)), "  times"));
                 displayBuild.append("\n" + String.format("%15s%3s%5s", "---------------", "\t\t\t", "---------------") + "\n");
             }
 
@@ -134,7 +162,11 @@ public class ItemParser {
         return displayBuild.toString();
 
     }
-    public int seenPriceOccurences(ArrayList<Item> list, Double price) {
+    public int getOccurencesOfItems(ArrayList list) {
+        return list.size();
+    }
+
+    public int getPriceOccurences(ArrayList<Item> list, Double price) {
         int countPrice =0;
         for (int i =0; i < list.size();i++){
             if (list.get(i).getPrice().equals(price)){
@@ -142,6 +174,17 @@ public class ItemParser {
             }
         }
         return countPrice;
+    }
+    public String generatePriceReport(Map.Entry<String,ArrayList<Item>> input) {
+        String reportPrice = "";
+        ArrayList<Double> nonDuplicatePrices = getUniquePrices(input);
+        for (int i = 0; i < nonDuplicatePrices.size(); i++) {
+            reportPrice += "Price";
+            reportPrice += (String.format("%10s", nonDuplicatePrices.get(i)));
+            reportPrice += ("\t\t\t\tseen: " + getPriceOccurences(input.getValue(), nonDuplicatePrices.get(i)) + " times\n");
+
+        }
+        return reportPrice;
     }
 
 
@@ -154,6 +197,9 @@ public class ItemParser {
         }
         return uniquePrice;
 
+    }
+    public String captitalizeFirstLetter(String input) {
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
     }
 
 

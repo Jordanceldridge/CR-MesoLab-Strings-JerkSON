@@ -21,6 +21,9 @@ public class Item {
         this.type = type;
         this.expiration = expiration;
     }
+    public String toString(){
+        return "name:" + name + "price:" + price + "type:" + type + "expiration:" + expiration;
+    }
 
     public String getName() {
         return name;
@@ -41,8 +44,5 @@ public class Item {
         return expiration;
     }
 
-    @Override
-    public String toString(){
-        return "name:" + name + " price:" + price + " type:" + type + " expiration:" + expiration;
-    }
+
 }
